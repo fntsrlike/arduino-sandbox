@@ -1,0 +1,67 @@
+#include <Wire.h>
+#include <SoftwareSerial.h>
+#include <LiquidCrystal_I2C.h>
+
+#define RX_PIN 8  // Arduino Board 接收端腳
+#define TX_PIN 9  // Arduino Board 傳送端腳
+#define LED_PIN 12 // LED PIN
+#define SERIAL_RATE 9600
+#define HC05_BTRate 38400
+#define HC06_BTRate 9600
+#define CUSTOM_BTRate 115200
+#define BT_RATE CUSTOM_BTRate
+
+#define LCD_ADDRESS 0x27
+#define LCD_COLS 16
+#define LCD_ROWS 2
+
+SoftwareSerial BT(RX_PIN, TX_PIN);
+LiquidCrystal_I2C LCD(LCD_ADDRESS, LCD_COLS, LCD_ROWS); // lcd_addr
+char data;
+
+void setup() {
+    serial_setup();
+    bluetooth_setup();
+    lcd_setup();
+}
+
+void loop() {
+    if (Serial.available()) {
+        while (Serial.available() > 0) {
+            data = Serial.read();
+            BT.print(data);
+        }
+    }
+
+    if (BT.available()) {
+        waiting_data_recieved();
+        LCD.clear();
+
+        while (BT.available() > 0) {
+            data = (char) BT.read();
+            Serial.print(data);
+            LCD.write(data);
+        }
+    }
+}
+
+void waiting_data_recieved() {
+    delay(100);
+}
+
+void serial_setup() {
+    Serial.begin(SERIAL_RATE);
+    while (!Serial);
+    Serial.println("Slave's serial is ready");
+}
+
+void bluetooth_setup() {
+    BT.begin(BT_RATE);
+    BT.println("Slave's BT is ready");
+}
+
+void lcd_setup() {
+    LCD.begin();
+    LCD.backlight();
+    LCD.print("Hello, world!");
+}
